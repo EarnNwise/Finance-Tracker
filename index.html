@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Tracker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: #0f172a; color: #f8fafc; padding-bottom: 75px; }
+        .header { background: #1e293b; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .header h2 { font-size: 18px; }
+        .lang-btn { background: #334155; color: #f8fafc; border: none; padding: 5px 10px; border-radius: 15px; font-size: 12px; cursor: pointer; }
+        
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        .card { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: center; }
+        .card h1 { font-size: 26px; color: #34d399; margin: 5px 0; }
+        .row { display: flex; justify-content: space-between; font-size: 14px; color: #94a3b8; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px; }
+        
+        .btn { background: #6366f1; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .list-item { background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #6366f1; }
+        
+        .fab { position: fixed; bottom: 70px; right: 20px; background: #f43f5e; color: white; width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 99; }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #1e293b; display: flex; border-top: 1px solid #334155; z-index: 100; }
+        .nav-btn { flex: 1; background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+        .nav-btn.active { color: #38bdf8; font-weight: bold; }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px; z-index: 200; }
+        .modal-content { background: #1e293b; width: 100%; max-width: 400px; padding: 20px; border-radius: 12px; max-height: 90vh; overflow-y: auto; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; }
+        .filter-select { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2 id="appTitle">Finance Tracker 💰</h2>
+    <button class="lang-btn" onclick="toggleLanguage()" id="langBtn">हिन्दी</button>
+</div>
+
+<div class="container">
+    <!-- PAGE 1: DASHBOARD -->
+    <div id="pageDashboard" class="page active">
+        <select id="timeFilter" class="filter-select" onchange="render()">
+            <option value="all">All Time / सभी समय</option>
+            <option value="monthly">This Month / इस महीने</option>
+        </select>
+
+        <div class="card">
+            <small id="lblNetBal">Total Balance</small>
+            <h1 id="netBal">₹0</h1>
+            <div class="row">
+                <span>Income: <b id="incTot" style="color:#38bdf8">₹0</b></span>
+                <span>Expense: <b id="expTot" style="color:#f43f5e">₹0</b></span>
+            </div>
+        </div>
+        <h3 id="recentTitle">Recent Transactions</h3>
+        <div id="transList" style="margin-top: 10px;"></div>
+    </div>
+
+    <!-- PAGE 2: ACCOUNTS -->
+    <div id="pageAccounts" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 id="accTitle">My Accounts</h3>
+            <button class="btn" style="width:auto; margin:0;" onclick="openAccModal()">+ Add</button>
+        </div>
+        <div id="accList"></div>
+    </div>
+
+    <!-- PAGE 3: SETTINGS -->
+    <div id="pageSettings" class="page">
+        <h3 id="settingsTitle">Settings</h3>
+        <button class="btn" style="background:#f43f5e; margin-top:20px;" onclick="resetData()" id="resetBtn">Clear All Data / Reset</button>
+    </div>
+</div>
+
+<!-- FLOATING BUTTON -->
+<button class="fab" onclick="openTransModal()">+</button>
+
+<!-- BOTTOM NAV -->
+<div class="nav">
+    <button class="nav-btn active" onclick="switchTab('Dashboard', this)">📊 <span id="navDash">Dashboard</span></button>
+    <button class="nav-btn" onclick="switchTab('Accounts', this)">💰 <span id="navAcc">Accounts</span></button>
+    <button class="nav-btn" onclick="switchTab('Settings', this)">⚙️ <span id="navSet">Settings</span></button>
+</div>
+
+<!-- TRANSACTION MODAL -->
+<div class="modal" id="transModal">
+    <div class="modal-content">
+        <h3 id="modalTransTitle">Add New Entry</h3>
+        <select id="tType" onchange="updateCategories()">
+            <option value="expense">Expense (-)</option>
+            <option value="income">Income (+)</option>
+        </select>
+        <input type="text" id="tTitle" placeholder="Description (e.g. Grocery, Salary)">
+        <input type="number" id="tAmount" placeholder="Amount (₹)">
+        <select id="tCategory"></select>
+        <select id="tAcc"></select>
+        <button class="btn" onclick="saveTrans()" id="saveTransBtn">Save</button>
+        <button class="btn" style="background:#334155; margin-top:5px;" onclick="closeTransModal()" id="cancelTransBtn">Cancel</button>
+    </div>
+</div>
+
+<!-- ACCOUNT MODAL -->
+<div class="modal" id="accModal">
+    <div class="modal-content">
+        <h3 id="modalAccTitle">Add/Edit Account</h3>
+        <input type="hidden" id="aEditId">
+        <input type="text" id="aName" placeholder="Account Name (e.g. SBI, Cash)">
+        <select id="aType">
+            <option value="Cash">Cash</option>
+            <option value="Bank">Bank</option>
+            <option value="Loan">Loan</option>
+            <option value="Investment">Investment</option>
+        </select>
+        <input type="number" id="aBal" placeholder="Opening Balance (₹)">
+        <button class="btn" onclick="saveAcc()" id="saveAccBtn">Save Account</button>
+        <button class="btn" style="background:#334155; margin-top:5px;" onclick="closeAccModal()" id="cancelAccBtn">Cancel</button>
+    </div>
+</div>
+
+<script>
+    let currentLang = 'en';
+    let accounts = JSON.parse(localStorage.getItem('ft_accounts')) || [
+        { id: 1, name: 'Cash', type: 'Cash', bal: 0 },
+        { id: 2, name: 'Bank', type: 'Bank', bal: 0 }
+    ];
+    let transactions = JSON.parse(localStorage.getItem('ft_trans')) || [];
+
+    const categories = {
+        expense: ["Food", "Bills", "Shopping", "Transport", "Other"],
+        income: ["Salary", "Business", "Gift", "Other"]
+    };
+
+    const langData = {
+        en: { appTitle: "Finance Tracker 💰", langBtn: "हिन्दी", lblNetBal: "Total Balance", recentTitle: "Recent Transactions", accTitle: "My Accounts", settingsTitle: "Settings", resetBtn: "Clear All Data / Reset", navDash: "Dashboard", navAcc: "Accounts", navSet: "Settings", modalTransTitle: "Add New Entry", saveTransBtn: "Save", cancelTransBtn: "Cancel", modalAccTitle: "Add Account", saveAccBtn: "Save Account", cancelAccBtn: "Cancel" },
+        hi: { appTitle: "फाइनेंस ट्रैकर 💰", langBtn: "English", lblNetBal: "कुल शेष राशि", recentTitle: "हाल के लेन-देन", accTitle: "मेरे खाते", settingsTitle: "सेटिंग्स", resetBtn: "डेटा साफ़ करें / रीसेट", navDash: "डैशबोर्ड", navAcc: "खाते", navSet: "सेटिंग्स", modalTransTitle: "नया लेन-देन जोड़ें", saveTransBtn: "सेव करें", cancelTransBtn: "रद्द करें", modalAccTitle: "खाता जोड़ें", saveAccBtn: "खाता सेव करें", cancelAccBtn: "रद्द करें" }
+    };
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'en' ? 'hi' : 'en';
+        let d = langData[currentLang];
+        document.getElementById('appTitle').innerText = d.appTitle;
+        document.getElementById('langBtn').innerText = d.langBtn;
+        document.getElementById('lblNetBal').innerText = d.lblNetBal;
+        document.getElementById('recentTitle').innerText = d.recentTitle;
+        document.getElementById('accTitle').innerText = d.accTitle;
+        document.getElementById('settingsTitle').innerText = d.settingsTitle;
+        document.getElementById('resetBtn').innerText = d.resetBtn;
+        document.getElementById('navDash').innerText = d.navDash;
+        document.getElementById('navAcc').innerText = d.navAcc;
+        document.getElementById('navSet').innerText = d.navSet;
+        document.getElementById('modalTransTitle').innerText = d.modalTransTitle;
+        document.getElementById('saveTransBtn').innerText = d.saveTransBtn;
+        document.getElementById('cancelTransBtn').innerText = d.cancelTransBtn;
+        document.getElementById('modalAccTitle').innerText = d.modalAccTitle;
+        document.getElementById('saveAccBtn').innerText = d.saveAccBtn;
+        document.getElementById('cancelAccBtn').innerText = d.cancelAccBtn;
+    }
+
+    function switchTab(tabName, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page' + tabName).classList.add('active');
+        el.classList.add('active');
+    }
+
+    function updateCategories() {
+        let type = document.getElementById('tType').value;
+        let catSel = document.getElementById('tCategory');
+        catSel.innerHTML = '';
+        categories[type].forEach(c => {
+            let opt = document.createElement('option');
+            opt.value = c;
+            opt.innerText = c;
+            catSel.appendChild(opt);
+        });
+    }
+
+    function openTransModal() {
+        document.getElementById('transModal').style.display = 'flex';
+        updateCategories();
+        let accSelect = document.getElementById('tAcc');
+        accSelect.innerHTML = '';
+        accounts.forEach(a => {
+            let opt = document.createElement('option');
+            opt.value = a.name;
+            opt.innerText = `${a.name} (${a.type})`;
+            accSelect.appendChild(opt);
+        });
+    }
+    function closeTransModal() { document.getElementById('transModal').style.display = 'none'; }
+
+    function openAccountModal(id = null) {
+        document.getElementById('accModal').style.display = 'flex';
+        if(id) {
+            let acc = accounts.find(a => a.id === id);
+            document.getElementById('aEditId').value = acc.id;
+            document.getElementById('aName').value = acc.name;
+            document.getElementById('aType').value = acc.type;
+            document.getElementById('aBal').value = acc.bal;
+        } else {
+            document.getElementById('aEditId').value = '';
+            document.getElementById('aName').value = '';
+            document.getElementById('aBal').value = '';
+        }
+    }
+    function openAccModal() { openAccountModal(null); }
+    function closeAccModal() { document.getElementById('accModal').style.display = 'none'; }
+
+    function saveTrans() {
+        let type = document.getElementById('tType').value;
+        let title = document.getElementById('tTitle').value;
+        let amount = parseFloat(document.getElementById('tAmount').value);
+        let category = document.getElementById('tCategory').value;
+        let acc = document.getElementById('tAcc').value;
+
+        if(!title || isNaN(amount)) {
+            alert('Please fill all fields correctly!');
+            return;
+        }
+
+        transactions.push({id: Date.now(), type, title, amount, category, acc, date: new Date().toISOString()});
+        localStorage.setItem('ft_trans', JSON.stringify(transactions));
+        document.getElementById('tTitle').value = '';
+        document.getElementById('tAmount').value = '';
+        closeTransModal();
+        render();
+    }
+
+    function saveAcc() {
+        let editId = document.getElementById('aEditId').value;
+        let name = document.getElementById('aName').value;
+        let type = document.getElementById('aType').value;
+        let bal = parseFloat(document.getElementById('aBal').value);
+
+        if(!name || isNaN(bal)) {
+            alert('Please fill account details!');
+            return;
+        }
+
+        if(editId) {
+            let acc = accounts.find(a => a.id == editId);
+            acc.name = name;
+            acc.type = type;
+            acc.bal = bal;
+        } else {
+            accounts.push({id: Date.now(), name, type, bal});
+        }
+
+        localStorage.setItem('ft_accounts', JSON.stringify(accounts));
+        closeAccModal();
+        render();
+    }
+
+    function deleteTrans(id) {
+        if(confirm("Delete this entry?")) {
+            transactions = transactions.filter(t => t.id !== id);
+            localStorage.setItem('ft_trans', JSON.stringify(transactions));
+            render();
+        }
+    }
+
+    function resetData() {
+        if(confirm('Reset all data?')) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    function render() {
+        let inc = 0, exp = 0;
+        let list = document.getElementById('transList');
+        list.innerHTML = '';
+
+        let filter = document.getElementById('timeFilter').value;
+        let now = new Date();
+
+        let filtered = transactions.filter(t => {
+            if(filter === 'monthly') {
+                let d = new Date(t.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }
+            return true;
+        });
+
+        filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        filtered.forEach(t => {
+            if(t.type === 'income') inc += t.amount;
+            else exp += t.amount;
+
+            let dStr = new Date(t.date).toLocaleDateString();
+            list.innerHTML += `
+                <div class="list-item" style="border-left-color: ${t.type==='income'?'#38bdf8':'#f43f5e'}">
+                    <div>
+                        <b>${t.title}</b> <small style="color:#38bdf8">(${t.category})</small><br>
+                        <small style="color:#94a3b8">${t.acc} • ${dStr}</small>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-weight:bold; color:${t.type==='income'?'#38bdf8':'#f43f5e'}">
+                            ${t.type==='income'?'+':'-'}₹${t.amount}
+                        </span>
+                        <button onclick="deleteTrans(${t.id})" style="background:none; border:none; color:#f43f5e; cursor:pointer;">✕</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById('incTot').innerText = '₹' + inc;
+        document.getElementById('expTot').innerText = '₹' + exp;
+
+        let totalOpening = accounts.reduce((sum, a) => sum + a.bal, 0);
+        let netTrans = transactions.reduce((sum, t) => t.type === 'income' ? sum + t.amount : sum - t.amount, 0);
+        document.getElementById('netBal').innerText = '₹' + (totalOpening + netTrans);
+
+        let accList = document.getElementById('accList');
+        accList.innerHTML = '';
+        accounts.forEach(a => {
+            accList.innerHTML += `
+                <div class="list-item">
+                    <div>
+                        <b>${a.name}</b><br>
+                        <small style="color:#94a3b8">Type: ${a.type} | Opening: ₹${a.bal}</small>
+                    </div>
+                    <button class="btn" style="width:auto; padding:5px 10px; margin:0;" onclick="openAccountModal(${a.id})">✏️</button>
+                </div>
+            `;
+        });
+    }
+
+    render();
+</script>
+
+</body>
+</html>
