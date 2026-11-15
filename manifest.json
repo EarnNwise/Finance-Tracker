@@ -1,0 +1,13 @@
+{
+  "background_color": "#bdb3b3",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Finance Tracker",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Finance Tracker",
+  "start_url": "/",
+  "theme_color": "#310c0c",
+  "id": "finance-tracker",
+  "description": "A simple bilingual finance tracker app to manage income and expenses."
+}
