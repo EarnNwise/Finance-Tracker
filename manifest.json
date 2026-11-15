@@ -12,7 +12,7 @@
   "description": "A simple bilingual finance tracker app to manage income and expenses.",
   "icons": [
     {
-      "src": "https://i.imgur.com/7A263tZ.png",
+      "src": "https://raw.githubusercontent.com/earnnwise/Finance-Tracker/main/icon.png",
       "sizes": "192x192",
       "type": "image/png"
     }
