@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.earnnwise.twa",
+        "sha256_cert_fingerprints": ["DE:2F:D8:6B:F3:4C:E1:41:B1:14:D4:DF:95:76:B4:49:75:62:1B:A2:F9:C7:E0:9A:28:5F:5E:46:20:0B:4F:2D"]
+      }
+    }]
