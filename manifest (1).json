@@ -1,0 +1,13 @@
+{
+  "background_color": "#b2a6a6",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Finance Tracker",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "earnnwise.github",
+  "start_url": "/",
+  "theme_color": "rgb(53, 24, 24)",
+  "id": "finance-tracker",
+  "description": "A simple bilingual finance tracker app to manage income and expenses."
+}
