@@ -9,5 +9,12 @@
   "start_url": "/",
   "theme_color": "#310c0c",
   "id": "finance-tracker",
-  "description": "A simple bilingual finance tracker app to manage income and expenses."
+  "description": "A simple bilingual finance tracker app to manage income and expenses.",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/7A263tZ.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
 }
